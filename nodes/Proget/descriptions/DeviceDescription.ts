@@ -37,10 +37,34 @@ export const deviceOperations: INodeProperties[] = [
 				description: 'Look up a device by its IMEI',
 			},
 			{
+				name: 'Get Groups',
+				value: 'getGroups',
+				action: 'Get the groups of a device',
+				description: 'List the groups a device belongs to',
+			},
+			{
+				name: 'Get Kiosk Profile',
+				value: 'getKioskProfile',
+				action: 'Get the kiosk profile assigned to a device',
+				description: 'Retrieve the kiosk profile currently assigned to a device',
+			},
+			{
+				name: 'Get Many',
+				value: 'getMany',
+				action: 'Get many devices',
+				description: 'List enrolled devices',
+			},
+			{
 				name: 'Restart',
 				value: 'restart',
 				action: 'Restart a device',
 				description: 'Reboot a device remotely',
+			},
+			{
+				name: 'Set Alias',
+				value: 'setAlias',
+				action: 'Set the alias of a device',
+				description: 'Change the alias shown for a device in Proget',
 			},
 			{
 				name: 'Wipe',
@@ -65,7 +89,16 @@ export const deviceFields: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				resource: ['device'],
-				operation: ['get', 'restart', 'wipe', 'enableKiosk', 'disableKiosk'],
+				operation: [
+					'get',
+					'restart',
+					'wipe',
+					'enableKiosk',
+					'disableKiosk',
+					'getGroups',
+					'getKioskProfile',
+					'setAlias',
+				],
 			},
 		},
 	},
@@ -81,6 +114,49 @@ export const deviceFields: INodeProperties[] = [
 			show: {
 				resource: ['device'],
 				operation: ['getByImei'],
+			},
+		},
+	},
+	{
+		displayName: 'Alias',
+		name: 'alias',
+		type: 'string',
+		default: '',
+		description: 'New alias for the device. Leave empty to clear it.',
+		displayOptions: {
+			show: {
+				resource: ['device'],
+				operation: ['setAlias'],
+			},
+		},
+	},
+	{
+		displayName: 'Return All',
+		name: 'returnAll',
+		type: 'boolean',
+		default: false,
+		description: 'Whether to return all results or only up to a given limit',
+		displayOptions: {
+			show: {
+				resource: ['device'],
+				operation: ['getMany'],
+			},
+		},
+	},
+	{
+		displayName: 'Limit',
+		name: 'limit',
+		type: 'number',
+		typeOptions: {
+			minValue: 1,
+		},
+		default: 50,
+		description: 'Max number of results to return',
+		displayOptions: {
+			show: {
+				resource: ['device'],
+				operation: ['getMany'],
+				returnAll: [false],
 			},
 		},
 	},

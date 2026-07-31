@@ -15,7 +15,10 @@ export class ProgetApi implements ICredentialType {
 
 	displayName = 'Proget API';
 
-	icon: Icon = 'file:icons/proget.svg';
+	icon: Icon = {
+		light: 'file:icons/proget.svg',
+		dark: 'file:icons/proget.dark.svg',
+	};
 
 	documentationUrl = 'https://proget.pl';
 
@@ -84,8 +87,8 @@ export class ProgetApi implements ICredentialType {
 	test: ICredentialTestRequest = {
 		request: {
 			baseURL: '={{$credentials.baseUrl}}',
-			url: '/api/mdm/device/',
-			qs: { imei: '000000000000000' },
+			url: '/api/mdm/device',
+			qs: { limit: 1, offset: 0 },
 		},
 	};
 }

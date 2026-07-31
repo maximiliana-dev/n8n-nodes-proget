@@ -19,6 +19,18 @@ export const applicationOperations: INodeProperties[] = [
 				description: 'Upload an APK and register it as a new application',
 			},
 			{
+				name: 'Download APK',
+				value: 'download',
+				action: 'Download the APK of an application',
+				description: 'Download the APK file of a catalog application as binary data',
+			},
+			{
+				name: 'Get Many',
+				value: 'getMany',
+				action: 'Get many applications',
+				description: 'List catalog applications, optionally filtered by package name',
+			},
+			{
 				name: 'Update From APK',
 				value: 'update',
 				action: 'Update an application from an APK',
@@ -78,11 +90,40 @@ export const applicationFields: INodeProperties[] = [
 		default: '',
 		required: true,
 		placeholder: 'e.g. 723ff8cf-57f2-43d4-90f1-91612d01625e',
-		description: 'UUID of the application to update',
+		description: 'UUID of the application',
 		displayOptions: {
 			show: {
 				resource: ['application'],
-				operation: ['update'],
+				operation: ['update', 'download'],
+			},
+		},
+	},
+	{
+		displayName: 'Put Output File in Field',
+		name: 'downloadBinaryProperty',
+		type: 'string',
+		default: 'data',
+		required: true,
+		hint: 'The name of the output binary field to put the APK file in',
+		displayOptions: {
+			show: {
+				resource: ['application'],
+				operation: ['download'],
+			},
+		},
+	},
+	{
+		displayName: 'Package Name Filter',
+		name: 'packageFilter',
+		type: 'string',
+		default: '',
+		placeholder: 'e.g. com.example.app',
+		description:
+			'Only return catalog applications whose package name contains this value. Proget matches substrings, so check the returned "packageId" when you need an exact match.',
+		displayOptions: {
+			show: {
+				resource: ['application'],
+				operation: ['getMany'],
 			},
 		},
 	},

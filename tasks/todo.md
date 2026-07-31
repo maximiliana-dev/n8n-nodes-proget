@@ -24,6 +24,17 @@ Community node package for the Proget MDM API, modeled after `n8n-nodes-trengo`.
 - API errors sanitized before rethrow (no headers/config leaked into workflow data).
 - APK uploads validated (ZIP magic bytes) and filename sanitized.
 
+## Extension: cover all mxa-ops Proget API usage
+
+- [x] Device: add Get Many (paginated), Set Alias (PATCH), Get Groups, Get Kiosk Profile (assigned); unwrap `{items,total}` in Get by IMEI
+- [x] New resource Device Application: Get Installed (paginated, filter), Get Managed, Get Assigned, Assign (catalog lookup + read-modify-write PUT), Unassign, Get State, Get Tasks
+- [x] Application: add Get Many (catalog search by packageId substring), Download APK (binary output)
+- [x] New resource Kiosk Profile: Get, Allow App, Disallow App (allowlist read-modify-write)
+- [x] Package name validation module + tests; paginated request helper
+- [x] Credential test → `GET /api/mdm/device?limit=1` (guaranteed 200)
+- [x] Node icon light/dark variants (match credentials)
+- [x] README + verify build/lint/tests (30 tests green)
+
 ## Review
 
 - Build, lint (`eslint-plugin-n8n-nodes-base`) and 27 unit tests green; `pnpm pack` ships only `dist/` + README.

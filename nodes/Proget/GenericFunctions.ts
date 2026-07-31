@@ -9,6 +9,7 @@ import { NodeApiError, NodeOperationError } from 'n8n-workflow';
 
 import { normalizeProgetBaseUrl } from './auth';
 import { buildMultipartBody, sanitizeFilename } from './multipart';
+import { isValidPackageName } from './packageName';
 
 const REQUEST_TIMEOUT_MS = 120_000;
 const MAX_APK_BYTES = 500 * 1024 * 1024;
@@ -33,6 +34,22 @@ export function assertImei(this: IExecuteFunctions, value: string, itemIndex: nu
 		throw new NodeOperationError(this.getNode(), 'IMEI must be a 14 to 16 digit number', {
 			itemIndex,
 		});
+	}
+	return trimmed;
+}
+
+export function assertPackageName(
+	this: IExecuteFunctions,
+	value: string,
+	itemIndex: number,
+): string {
+	const trimmed = value.trim();
+	if (!isValidPackageName(trimmed)) {
+		throw new NodeOperationError(
+			this.getNode(),
+			`"${trimmed}" is not a valid Android package name`,
+			{ itemIndex },
+		);
 	}
 	return trimmed;
 }
@@ -105,6 +122,48 @@ export async function progetApiRequest(
 		}
 		throw toSanitizedApiError.call(this, error, itemIndex);
 	}
+}
+
+const PAGE_SIZE = 100;
+
+/**
+ * Collects items from a Proget paginated endpoint ({ items, total }), advancing the
+ * offset by what each page actually returned: Proget may cap the served page size.
+ */
+export async function progetApiRequestPaged(
+	this: IExecuteFunctions,
+	endpoint: string,
+	itemIndex: number,
+	qs: IDataObject,
+	returnAll: boolean,
+	limit: number,
+): Promise<IDataObject[]> {
+	const max = returnAll ? Number.POSITIVE_INFINITY : limit;
+	const collected: IDataObject[] = [];
+	let offset = 0;
+	let total = Number.POSITIVE_INFINITY;
+
+	while (offset < total && collected.length < max) {
+		const requestLimit = Math.min(PAGE_SIZE, max - collected.length);
+		const response = (await progetApiRequest.call(this, 'GET', endpoint, itemIndex, undefined, {
+			...qs,
+			limit: requestLimit,
+			offset,
+		})) as { items?: IDataObject[]; total?: number };
+
+		const page = Array.isArray(response?.items) ? response.items : [];
+		if (typeof response?.total === 'number') {
+			total = response.total;
+		}
+		if (page.length === 0) {
+			break;
+		}
+
+		collected.push(...page);
+		offset += page.length;
+	}
+
+	return returnAll ? collected : collected.slice(0, limit);
 }
 
 /**
