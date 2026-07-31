@@ -1,6 +1,6 @@
 {
 	"name": "@maximiliana/n8n-nodes-proget",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "n8n community nodes for the Proget MDM: devices, applications (APK upload), activations and auto-enrollment",
 	"keywords": [
 		"n8n-community-node-package",
