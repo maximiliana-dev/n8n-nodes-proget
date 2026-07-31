@@ -1,0 +1,7 @@
+allowBuilds:
+  # tsx needs the esbuild binary to run the TypeScript test suite
+  esbuild: true
+  # postinstall only prints a funding message
+  eslint-plugin-n8n-nodes-base: false
+  # native build not needed: n8n-workflow is a types-only dev dependency here
+  isolated-vm: false

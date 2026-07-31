@@ -24,7 +24,6 @@ function sanitizeHeaderValue(value: string): string {
 
 export function sanitizeFilename(filename: string, fallback: string): string {
 	const basename = filename.split(/[/\\]/).pop() ?? '';
-	// eslint-disable-next-line no-control-regex
 	const cleaned = basename.replace(/[\u0000-\u001f\u007f]/g, '').trim();
 	return cleaned.length > 0 ? cleaned : fallback;
 }

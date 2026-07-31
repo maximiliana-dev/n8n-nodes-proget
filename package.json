@@ -20,19 +20,19 @@
 		"url": "https://github.com/maximiliana-dev/n8n-nodes-proget.git"
 	},
 	"engines": {
-		"node": ">=20.0.0",
-		"pnpm": ">=9.1"
+		"node": ">=22.0.0",
+		"pnpm": ">=10"
 	},
-	"packageManager": "pnpm@9.1.4",
+	"packageManager": "pnpm@11.15.1",
 	"scripts": {
 		"preinstall": "npx only-allow pnpm",
-		"build": "tsc && gulp build:icons",
+		"build": "tsc && node scripts/copy-icons.mjs",
 		"dev": "tsc --watch",
 		"format": "prettier nodes credentials --write",
 		"lint": "eslint nodes credentials package.json",
 		"lintfix": "eslint nodes credentials package.json --fix",
 		"test": "node --import tsx --test \"nodes/**/*.test.ts\"",
-		"prepublishOnly": "pnpm build && pnpm lint -c .eslintrc.prepublish.js nodes credentials package.json"
+		"prepublishOnly": "pnpm build && eslint -c eslint.config.prepublish.mjs nodes credentials package.json"
 	},
 	"files": [
 		"dist"
@@ -47,25 +47,18 @@
 		]
 	},
 	"devDependencies": {
+		"@eslint/eslintrc": "^3.3.0",
 		"@types/node": "^22.15.0",
-		"@typescript-eslint/parser": "^7.15.0",
-		"eslint": "^8.56.0",
-		"eslint-plugin-n8n-nodes-base": "^1.16.1",
-		"gulp": "^4.0.2",
+		"@typescript-eslint/parser": "^8.35.0",
+		"eslint": "^9.39.0",
+		"eslint-plugin-n8n-nodes-base": "^1.16.7",
+		"n8n-workflow": "~2.17.2",
 		"prettier": "^3.3.2",
 		"tsx": "^4.19.0",
 		"typescript": "^5.5.3"
 	},
 	"peerDependencies": {
 		"n8n-workflow": "*"
-	},
-	"dependencies": {
-		"n8n-workflow": "~2.17.2"
-	},
-	"pnpm": {
-		"neverBuiltDependencies": [
-			"isolated-vm"
-		]
 	},
 	"publishConfig": {
 		"access": "public"
