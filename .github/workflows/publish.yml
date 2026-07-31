@@ -1,0 +1,38 @@
+name: Publish to NPM 🚀
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.1.4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org/'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build project
+        run: pnpm build
+
+      # Use a recent npm (>=11.5.1) for the publish step via npx, because
+      # the bundled npm in Node 22 (10.x) does not implement the OIDC
+      # trusted-publishing token exchange.
+      - name: Publish to npm via OIDC
+        run: npx -y npm@latest publish --access public --provenance

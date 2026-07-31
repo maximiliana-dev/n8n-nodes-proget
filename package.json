@@ -1,0 +1,73 @@
+{
+	"name": "@maximiliana/n8n-nodes-proget",
+	"version": "0.1.0",
+	"description": "n8n community nodes for the Proget MDM: devices, applications (APK upload), activations and auto-enrollment",
+	"keywords": [
+		"n8n-community-node-package",
+		"proget",
+		"mdm",
+		"android",
+		"apk"
+	],
+	"license": "MIT",
+	"homepage": "https://github.com/maximiliana-dev",
+	"author": {
+		"name": "Maximiliana",
+		"email": "pedro@maximiliana.es"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/maximiliana-dev/n8n-nodes-proget.git"
+	},
+	"engines": {
+		"node": ">=20.0.0",
+		"pnpm": ">=9.1"
+	},
+	"packageManager": "pnpm@9.1.4",
+	"scripts": {
+		"preinstall": "npx only-allow pnpm",
+		"build": "tsc && gulp build:icons",
+		"dev": "tsc --watch",
+		"format": "prettier nodes credentials --write",
+		"lint": "eslint nodes credentials package.json",
+		"lintfix": "eslint nodes credentials package.json --fix",
+		"test": "node --import tsx --test \"nodes/**/*.test.ts\"",
+		"prepublishOnly": "pnpm build && pnpm lint -c .eslintrc.prepublish.js nodes credentials package.json"
+	},
+	"files": [
+		"dist"
+	],
+	"n8n": {
+		"n8nNodesApiVersion": 1,
+		"credentials": [
+			"dist/credentials/Proget/ProgetApi.credentials.js"
+		],
+		"nodes": [
+			"dist/nodes/Proget/Proget.node.js"
+		]
+	},
+	"devDependencies": {
+		"@types/node": "^22.15.0",
+		"@typescript-eslint/parser": "^7.15.0",
+		"eslint": "^8.56.0",
+		"eslint-plugin-n8n-nodes-base": "^1.16.1",
+		"gulp": "^4.0.2",
+		"prettier": "^3.3.2",
+		"tsx": "^4.19.0",
+		"typescript": "^5.5.3"
+	},
+	"peerDependencies": {
+		"n8n-workflow": "*"
+	},
+	"dependencies": {
+		"n8n-workflow": "~2.17.2"
+	},
+	"pnpm": {
+		"neverBuiltDependencies": [
+			"isolated-vm"
+		]
+	},
+	"publishConfig": {
+		"access": "public"
+	}
+}
