@@ -59,23 +59,84 @@ async function getBaseUrl(this: IExecuteFunctions): Promise<string> {
 	return normalizeProgetBaseUrl(credentials.baseUrl as string);
 }
 
-// Rethrows API failures with only safe, useful context: no request config,
-// no headers, no credentials.
+const ERROR_BODY_MESSAGE_KEYS = ['message', 'error', 'detail', 'details', 'title', 'errors'];
+const MAX_ERROR_MESSAGE_LENGTH = 300;
+
+// Proget does not document its error body shape, so probe the usual suspects.
+export function extractProgetErrorMessage(body: unknown, depth = 0): string | undefined {
+	if (depth > 3 || body === null || body === undefined) {
+		return undefined;
+	}
+	if (typeof body === 'string') {
+		const trimmed = body.trim();
+		if (trimmed === '' || trimmed.startsWith('<')) {
+			return undefined;
+		}
+		if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+			try {
+				return extractProgetErrorMessage(JSON.parse(trimmed), depth + 1);
+			} catch {
+				// not JSON after all: use the raw string
+			}
+		}
+		return trimmed.length > MAX_ERROR_MESSAGE_LENGTH
+			? `${trimmed.slice(0, MAX_ERROR_MESSAGE_LENGTH)}…`
+			: trimmed;
+	}
+	if (Array.isArray(body)) {
+		const parts = body
+			.map((entry) => extractProgetErrorMessage(entry, depth + 1))
+			.filter((part): part is string => part !== undefined);
+		return parts.length > 0 ? parts.join('; ') : undefined;
+	}
+	if (typeof body === 'object') {
+		const record = body as Record<string, unknown>;
+		for (const key of ERROR_BODY_MESSAGE_KEYS) {
+			const message = extractProgetErrorMessage(record[key], depth + 1);
+			if (message !== undefined) {
+				return message;
+			}
+		}
+	}
+	return undefined;
+}
+
+// Rethrows API failures surfacing the Proget response message instead of n8n's
+// generic per-status text, with only safe context: no request config, no
+// headers, no credentials.
 function toSanitizedApiError(
 	this: IExecuteFunctions,
 	error: unknown,
 	itemIndex: number,
 ): NodeApiError {
-	const anyError = error as {
-		message?: string;
-		response?: { status?: number; statusCode?: number; data?: unknown; body?: unknown };
-		statusCode?: number;
-	};
-	const statusCode = anyError.response?.status ?? anyError.response?.statusCode ?? anyError.statusCode;
-	const responseBody = anyError.response?.data ?? anyError.response?.body;
+	let statusCode: string | undefined;
+	let responseBody: unknown;
+	let fallbackDetail: string | undefined;
+	let rawMessage: string | undefined;
+
+	if (error instanceof NodeApiError) {
+		// httpRequestWithAuthentication already wrapped the failure; recover the
+		// response Proget sent and rebuild the error with its actual message.
+		statusCode = error.httpCode ?? undefined;
+		responseBody = error.context.data;
+		fallbackDetail = error.description ?? undefined;
+		rawMessage = error.message;
+	} else {
+		const anyError = error as {
+			message?: string;
+			response?: { status?: number; statusCode?: number; data?: unknown; body?: unknown };
+			statusCode?: number;
+		};
+		const status = anyError.response?.status ?? anyError.response?.statusCode ?? anyError.statusCode;
+		statusCode = status !== undefined ? String(status) : undefined;
+		responseBody = anyError.response?.data ?? anyError.response?.body;
+		rawMessage = anyError.message;
+	}
+
+	const detail = extractProgetErrorMessage(responseBody) ?? fallbackDetail;
 
 	const safeError: JsonObject = {
-		message: anyError.message ?? 'Unknown error',
+		message: detail ?? rawMessage ?? 'Unknown error',
 	};
 	if (statusCode !== undefined) safeError.statusCode = statusCode;
 	if (responseBody !== undefined) {
@@ -86,9 +147,16 @@ function toSanitizedApiError(
 		}
 	}
 
+	let message: string | undefined;
+	if (detail !== undefined) {
+		message = statusCode !== undefined ? `Proget error (HTTP ${statusCode}): ${detail}` : `Proget error: ${detail}`;
+	} else if (statusCode !== undefined) {
+		message = `Proget API request failed with status ${statusCode}`;
+	}
+
 	return new NodeApiError(this.getNode(), safeError, {
-		message: statusCode !== undefined ? `Proget API request failed with status ${statusCode}` : undefined,
-		httpCode: statusCode !== undefined ? String(statusCode) : undefined,
+		message,
+		httpCode: statusCode,
 		itemIndex,
 	});
 }
@@ -117,7 +185,7 @@ export async function progetApiRequest(
 	try {
 		return await this.helpers.httpRequestWithAuthentication.call(this, 'progetApi', options);
 	} catch (error) {
-		if (error instanceof NodeApiError || error instanceof NodeOperationError) {
+		if (error instanceof NodeOperationError) {
 			throw error;
 		}
 		throw toSanitizedApiError.call(this, error, itemIndex);
