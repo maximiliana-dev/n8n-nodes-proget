@@ -262,6 +262,14 @@ export async function progetUploadApk(
 		);
 	}
 
+	// n8n's 401 retry (refresh session, resend) inspects the body with Object.values(),
+	// which throws "Invalid array length" on buffers above ~134 MB. Refreshing the session
+	// on a tiny request first keeps the upload itself off that path.
+	await progetApiRequest.call(this, 'GET', '/api/mdm/device', itemIndex, undefined, {
+		limit: 1,
+		offset: 0,
+	});
+
 	const filename = sanitizeFilename(binaryData.fileName ?? '', 'application.apk');
 	const { body, contentType } = buildMultipartBody(
 		[{ name: 'type', value: 'application' }],
